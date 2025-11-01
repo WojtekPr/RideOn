@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct RideOnApp: App {
@@ -13,5 +14,7 @@ struct RideOnApp: App {
         WindowGroup {
             ContentView()
         }
+        // Konfiguracja kontenera SwiftData dla modeli do zapisu
+        .modelContainer(for: [TrackingRecord.self, Coordinate.self])
     }
 }
