@@ -28,6 +28,7 @@ struct MetricView: View {
     }
 }
 
+
 #Preview {
     MetricView(title: "Dystans", value: "10.5 km")
 }
