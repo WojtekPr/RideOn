@@ -34,8 +34,8 @@ struct SummaryView: View {
             VStack {
                 
                 // Mapa podsumowująca
-                Map(coordinateRegion: $mapRegion)
-                    .overlay(
+                Map(coordinateRegion: $mapRegion, interactionModes: [.pan, .zoom])                    .overlay(
+                        // Używamy RouteOverlay do rysowania trasy
                         RouteOverlay(coordinates: session.allCoordinates)
                     )
                     .frame(height: 350)
