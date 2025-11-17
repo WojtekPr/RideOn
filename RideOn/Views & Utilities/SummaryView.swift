@@ -5,20 +5,28 @@
 //  Created by Wojciech Prabucki on 01/11/2025.
 //
 
-// SummaryView.swift
+/// SummaryView.swift
 import SwiftUI
 import MapKit
 
 struct SummaryView: View {
     
+    // Używamy @Environment, aby przycisk "Zamknij" działał
+    @Environment(\.dismiss) var dismiss
+    
     let session: TrackingSession
     @State private var mapRegion: MKCoordinateRegion
+    
+    // STAN KONTROLUJĄCY: Otwiera FullscreenMapView
+    @State private var isShowingFullscreenMap = false
     
     init(session: TrackingSession) {
         self.session = session
         
-        if session.allCoordinates.count > 1 {
-            let polyline = MKPolyline(coordinates: session.allCoordinates, count: session.allCoordinates.count)
+        let coords = session.allCoordinates
+        
+        if coords.count > 1 {
+            let polyline = MKPolyline(coordinates: coords, count: coords.count)
             let rect = polyline.boundingMapRect
             _mapRegion = State(initialValue: MKCoordinateRegion(rect))
         } else {
@@ -33,14 +41,27 @@ struct SummaryView: View {
         NavigationView {
             VStack {
                 
-                // Mapa podsumowująca
-                Map(coordinateRegion: $mapRegion, interactionModes: [.pan, .zoom])                    .overlay(
-                        // Używamy RouteOverlay do rysowania trasy
+                // 1. MAPA Z WIDOKIEM PODSUMOWANIA I PRZYCISKIEM FULLSCREEN
+                Map(coordinateRegion: $mapRegion)
+                    .overlay(
+                        // Używamy RouteOverlay, który rysuje linię, ale ma wyłączone interakcje
                         RouteOverlay(coordinates: session.allCoordinates)
                     )
+                // Nakładka z przyciskiem powiększenia
+                    .overlay(alignment: .topTrailing) {
+                        Button {
+                            isShowingFullscreenMap = true // Aktywuje pełny ekran
+                        } label: {
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .padding(8)
+                                .background(.thinMaterial)
+                                .clipShape(Circle())
+                        }
+                        .padding(10)
+                    }
                     .frame(height: 350)
                 
-                // Wyniki
+                // 2. Wyniki i Statystyki
                 VStack(spacing: 15) {
                     Text("Zakończono Przejazd 🎉")
                         .font(.title)
@@ -51,7 +72,6 @@ struct SummaryView: View {
                     
                     HStack {
                         MetricView(title: "Całkowity Dystans", value: session.distanceInKilometers)
-                        
                         MetricView(title: "Max Prędkość", value: session.maxSpeedInKmH)
                             .foregroundColor(.red)
                     }
@@ -65,9 +85,13 @@ struct SummaryView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Zamknij") {
-                        // Automatycznie zamyka widok .sheet
+                        dismiss() // Używamy dismiss, aby zamknąć modal
                     }
                 }
+            }
+            // 3. WIDOK MODALNY PEŁNOEKRANOWEJ MAPY
+            .fullScreenCover(isPresented: $isShowingFullscreenMap) {
+                FullscreenMapView(session: session)
             }
         }
     }

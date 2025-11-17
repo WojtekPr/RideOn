@@ -11,6 +11,9 @@ import SwiftData
 
 struct StatsView: View {
     
+    // 1. Wstrzykujemy obiekt AuthViewModel, który kontroluje stan logowania
+    @EnvironmentObject var authViewModel: AuthViewModel
+    
     @StateObject private var viewModel = StatsViewModel()
     @Query private var records: [TrackingRecord]
     
@@ -35,9 +38,21 @@ struct StatsView: View {
             }
             .navigationTitle("Statystyki")
             
-            // NOWA LOGIKA ZMIAN W iOS 17: Używamy nowego API onChange
-            .onChange(of: records.count, initial: true) { // initial: true - WYWOŁUJE SIĘ PRZY PIERWSZYM ZAŁADOWANIU
-                // Wywołujemy obliczenia, używając aktualnej tablicy records
+            // 2. Dodajemy przycisk Wyloguj w pasku nawigacji
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        authViewModel.signOut() // Wywołanie metody wylogowania
+                    } label: {
+                        Text("Wyloguj")
+                        Image(systemName: "person.crop.circle.badge.xmark")
+                    }
+                    .tint(.red)
+                }
+            }
+            
+            // NOWA LOGIKA ZMIAN w iOS 17
+            .onChange(of: records.count, initial: true) {
                 viewModel.calculateStatistics(from: records)
             }
         }
